@@ -200,3 +200,20 @@ theorem continuous_at_comp {f g : ℝ → ℝ} {x : ℝ}
   · intro y hy
     unfold Function.comp
     exact hgδ (f y) (hfδ y hy)
+
+
+-- Some Quirks of Lean
+
+-- In Lean functions are total (they are defined for every input)
+-- leading to some quirks
+
+#eval (1 : ℚ) / 0   -- 0
+
+#eval 3 - 5         -- 0, because these are Naturals
+
+#eval 7 % 0         -- 7
+
+example : Real.sqrt (-1) = 0
+  := by grind
+
+-- Further cases: Integral of non-integrable functions, inverting operators..
