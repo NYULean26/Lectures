@@ -1,0 +1,11 @@
+{
+  "name": "nyulean26-lectures-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "live-url": "node scripts/live-lean-url.mjs"
+  },
+  "devDependencies": {
+    "lz-string": "1.5.0"
+  }
+}
