@@ -1,4 +1,4 @@
-import Mathlib
+import Mathlib.Topology.MetricSpace.Defs
 
 section Continuous
 
