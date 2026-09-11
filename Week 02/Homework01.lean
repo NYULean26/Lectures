@@ -1,4 +1,5 @@
 import Mathlib.Topology.MetricSpace.Defs
+import Mathlib.Topology.MetricSpace.Pseudo.Constructions
 
 section Continuous
 
