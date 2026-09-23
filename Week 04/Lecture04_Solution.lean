@@ -1,10 +1,5 @@
 import Mathlib
 
-/-
-Week 4 live worksheet: instructor reference
-Adapted from https://github.com/jaumededios/ETHZ_Formalizing_Math/tree/main/ETHZFormalizingMath/W04
--/
-
 namespace Week04
 
 /-! A. Build inductive values -/
