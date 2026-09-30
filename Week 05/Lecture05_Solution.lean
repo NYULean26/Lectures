@@ -9,11 +9,23 @@ Lean has an convenient way to store lists of information
 (i.e. Σ-types) as structures, where we can name the fields.
 -/
 
+@[ext]
 structure NatPoint where
   x : Nat
   y : Nat
 
 -- This is equivalent to ℕ × ℕ but with named accessors.
+
+-- A structure is an inductive type with one constructor.
+inductive NatPoint' where
+  | mk : Nat → Nat → NatPoint'
+
+-- Structures also generate the projections and the record syntax for us.
+#print NatPoint
+
+def NatPoint'.addCoords (p : NatPoint') : Nat :=
+  match p with
+  | .mk x y => x + y
 
 -- It comes with a built in constructor
 #check NatPoint.mk
@@ -67,6 +79,18 @@ def NatPoint.double (p : NatPoint) :=  p.add p
 
 #reduce p.double
 
+/-
+### Equality of structures
+-/
+
+#check NatPoint.ext
+
+-- To show that two points are equal, compare their coordinates.
+theorem NatPoint.add_comm (p q : NatPoint) : p.add q = q.add p := by
+  ext <;> simp [NatPoint.add, Nat.add_comm]
+
+-- `ext` leaves one goal for x and one for y. Each is commutativity in Nat.
+
 
 /-
 ### Constructors
@@ -96,7 +120,7 @@ def q2 := {q with x := 0}
 
 #reduce q2
 
--- One can define _dependent_ structures like everything else in Lean.
+-- Structures can have parameters, like everything else in Lean.
 
 structure Point (T : Type u) where
   x : T
@@ -123,6 +147,7 @@ structure Semigroup' where
 
 inductive Color where
   | red | green | blue
+  deriving Repr, DecidableEq
 
 
 -- We can define new structures by extending
@@ -171,6 +196,10 @@ structure Group' extends Semigroup' where
 structure HasAddition (α : Type u) where
   add : α → α → α
 
+-- An operation is not a law: HasAddition does not say that addition is associative.
+#check Semigroup'.mul_assoc
+-- In Semigroup', associativity is a separate field containing a proof.
+
 def double {α : Type u} (s : HasAddition α) (x : α) := s.add x x
 
 
@@ -195,8 +224,17 @@ def double_typeclass {α : Type} [AddType α] (a : α) :α
 
 #reduce double_typeclass (Point.mk 1 2)
 
+-- What did Lean fill in for us?
+#check @double_typeclass
+#synth AddType (Point Nat)
+
+#reduce @double_typeclass (Point Nat) PointsHaveAddition' (Point.mk 1 2)
+
+-- [AddType α] is an argument, just like the record we passed to double.
+-- Lean searches for a registered instance and supplies it for us.
+
 -- Lean implements this class, it's called `Add`
--- Lean implements the `+` notation as syntactic sugar for Add.add
+-- The `+` notation uses HAdd.hAdd; an Add instance supplies the usual case.
 
 
 -- ## The power of parametrized typeclasses
@@ -219,10 +257,21 @@ instance Product_add (α : Type) (β : Type) [Add α] [Add β] : Add ((Point α)
 
 variable (n : Nat) (z : Int)
 
+@[ext]
 structure Integer where
   negative : Bool --
   abs : Nat
   no_dupl : ¬(negative ∧ (abs = 0)) -- We don't want 0  and -0
+
+-- We compare the data, not the proofs of no_dupl.
+example (a b : Integer) (hs : a.negative = b.negative) (ha : a.abs = b.abs) :
+    a = b := by
+  ext
+  · exact hs
+  · exact ha
+
+-- Once the data agree, the proof fields prove the same proposition.
+-- Proof irrelevance means they cannot distinguish the two integers.
 
 instance : OfNat Integer n where
   ofNat := { abs := n, negative := False, no_dupl := by grind}
@@ -286,6 +335,40 @@ class Group'' (A : Type) extends Semigroup A, Inv A where
 
 -- ## Some recurring typeclasses
 
+/-
+### Decidable propositions
+-/
+
+#print Decidable
+#check Decidable.isTrue
+#check Decidable.isFalse
+
+-- A decision is data: either a proof of P, or a proof of ¬ P.
+-- Decidable P lives in Type, not Prop. We can inspect its constructor
+-- to decide which branch of a program to run.
+
+def chooseIf (P : Prop) [h : Decidable P] (a b : Nat) : Nat :=
+  match h with
+  | .isTrue _ => a
+  | .isFalse _ => b
+
+-- This is what `if P then a else b` does.
+#eval chooseIf (2 < 3) 10 20
+
+-- The `deriving DecidableEq` on Color generated a decision procedure.
+#synth DecidableEq Color
+#eval if Color.red = Color.blue then 10 else 20
+
+-- We can also use the computation to prove something.
+example : Color.red ≠ Color.blue := by
+  decide
+
+#check Classical.propDecidable
+-- Classical reasoning supplies decisions too, but not an executable test.
+-- P ∨ ¬ P is a proposition; Decidable P is data choosing a branch.
+-- Classical.propDecidable uses choice to cross this gap and is noncomputable.
+-- In contrast, the instance derived for Color computes by comparing constructors.
+
 -- ### Coercion
 -- There is a type class called Coe which records "Things that can be coerced into"
 instance (α : Type) : Coe (Point α) (α × α) where
@@ -294,6 +377,6 @@ instance (α : Type) : Coe (Point α) (α × α) where
 #check (t : Nat × Nat)
 
 
--- There is also a @[coe] tag whichgenerates the instance.
+-- The @[coe] tag helps the pretty-printer recognize a coercion; it does not register an instance.
 @[coe]
 def toProduct {α : Type} (a : Point α) : (α × α ) := (a.x, a.y)
