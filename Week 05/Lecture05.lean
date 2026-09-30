@@ -9,7 +9,6 @@ Lean has an convenient way to store lists of information
 (i.e. Σ-types) as structures, where we can name the fields.
 -/
 
-@[ext]
 structure NatPoint where
   x : Nat
   y : Nat
@@ -17,14 +16,10 @@ structure NatPoint where
 -- This is equivalent to ℕ × ℕ but with named accessors.
 
 -- A structure is an inductive type with one constructor.
-inductive NatPoint' where
-  | mk : Nat → Nat → NatPoint'
+inductive NatPoint2 where
+  | mk : Nat → Nat → NatPoint2
 
 #print NatPoint
-
-def NatPoint'.addCoords (p : NatPoint') : Nat :=
-  match p with
-  | .mk x y => x + y
 
 -- It comes with a built in constructor
 #check NatPoint.mk
@@ -54,9 +49,11 @@ For an element `e` of type `T`, Lean automatically turns
 #eval p.x -- this is the same as NatPoint.x p
 
 
-def NatPoint.addCoords (p : NatPoint) : Nat := p.x + p.y
+def NatPoint.addCoords (p : NatPoint) : Nat := sorry
+#reduce p.addCoords
 
-#eval p.addCoords
+def NatPoint2.addCoords (p : NatPoint2) : Nat := sorry
+
 
 /-
 The `NatPoint.addCoords` is, in Lean, stored as `addCoords` inside of the namespace `NatPoint`
@@ -67,7 +64,7 @@ namespace NatPoint -- We enter the NatPoint namespace
 #check addCoords
 
 -- Aside: Writing "namespace" opens the namespace in "editing" mode, everyting
--- you write now gets engoded there
+-- you write now gets encoded there
 
 def add (p q : NatPoint) : NatPoint := by
   sorry
@@ -84,7 +81,8 @@ def NatPoint.double (p : NatPoint) : NatPoint := by
 ### Equality of structures
 -/
 
-#check NatPoint.ext
+-- Go back and add @[ext] above NatPoint to generate the extensionality lemma.
+-- #check NatPoint.ext
 
 -- To show that two points are equal, compare their coordinates.
 theorem NatPoint.add_comm (p q : NatPoint) : p.add q = q.add p := by
@@ -92,7 +90,7 @@ theorem NatPoint.add_comm (p q : NatPoint) : p.add q = q.add p := by
 
 
 /-
-### Constructors
+### A zoo of constructors
 
 Lean offers more ways to construct points than you would need.
 
@@ -115,9 +113,7 @@ def q : NatPoint where
 
 -- There is a `with` keyword to modify a pre-existing structure.
 
-def q2 := {q with x := 0}
 
-#reduce q2
 
 -- Structures can have parameters, like everything else in Lean.
 
@@ -125,18 +121,20 @@ structure Point (T : Type u) where
   x : T
   y : T
 
+#check Point.mk -- notice anything weird?
+
+
 def mypoint := Point.mk (2:Nat) 3
 
 #check mypoint
 
 
 /-
-We use structures to store algebraic data
+We can use structures to store algebraic data.
+A semigroup is a type with an associative operation.
 -/
 structure Semigroup' where
   carrier : Type
-  mul : carrier → carrier → carrier
-  mul_assoc : ∀ a b c, mul (mul a b) c = mul a (mul b c)
 
 
 /-
@@ -146,7 +144,6 @@ structure Semigroup' where
 
 inductive Color where
   | red | green | blue
-  deriving Repr, DecidableEq
 
 
 -- We can define new structures by extending
@@ -154,7 +151,7 @@ inductive Color where
 structure CPoint (α : Type u) extends Point α where
   c : Color
 
-#check ({x:=2, y:=3, c:=Color.red } : CPoint _ )
+-- You can create a `CPoint` from scratch, and using with to extend `p`
 
 -- we can use the _with_ to extend
 #check ({p with c:=Color.red } : CPoint _ )
@@ -170,22 +167,17 @@ structure RGBPoint (α : Type u) extends Point α, RGBValue
 
 def origin := {x:=0, y:=0 : Point Nat}
 
-def yelloworigin : RGBPoint Nat :=
-  {origin with red :=255, green := 255, blue := 0}
 
-structure RGPoint (α : Type u) extends RGBPoint α where
-  noBlue : (blue = 0)
+-- Let's create a RGPoint structure which is an RGBPoint with no blue
 
-def noblueorigin : RGPoint Nat := {yelloworigin with noBlue := by rfl }
 
 /-
 We can _layer_ definitions using `extends`.
+
+Define a `monoid` to be a semigroup with unit, and a group
+to be a monoid with inverse.
 -/
-structure Group' extends Semigroup' where
-  e : carrier
-  e_prop: (∀ g : carrier, mul e g = g)
-  inv : carrier → carrier
-  inv_is : (∀ g : carrier, mul (inv g) g = e)
+
 
 
 
@@ -195,19 +187,14 @@ structure Group' extends Semigroup' where
 structure HasAddition (α : Type u) where
   add : α → α → α
 
--- An operation is not a law: HasAddition does not say that addition is associative.
-#check Semigroup'.mul_assoc
 
 def double {α : Type u} (s : HasAddition α) (x : α) := s.add x x
 
+-- Now we can use this to store `HasAddition` in a structure
+-- that records that points have addition to use the generic `double`
 
-def PointsHaveAddition : HasAddition (Point Nat) where
-  add : (Point Nat → Point Nat → Point Nat) :=
-    by sorry
-
-#reduce double (PointsHaveAddition) (Point.mk 1 2)
-
--- Problem: we must record the typeclass all the time.
+-- Problem: we must pass the `HasAddition` all the time.
+-- Solution: Record it automatically!
 
 -- ## Our first typeclass
 
@@ -215,7 +202,7 @@ class AddType (α : Type) where
   add : α → α → α
 
 instance PointsHaveAddition' : AddType (Point Nat) where
-  add :=  PointsHaveAddition.add
+  add :=  sorry
 
 def double_typeclass {α : Type} [AddType α] (a : α) :α
   := by sorry
@@ -225,12 +212,14 @@ def double_typeclass {α : Type} [AddType α] (a : α) :α
 -- What did Lean fill in for us?
 #check @double_typeclass
 #synth AddType (Point Nat)
+#check (inferInstance : AddType (Point Nat))
 
-#reduce @double_typeclass (Point Nat) PointsHaveAddition' (Point.mk 1 2)
+-- Fill out @double_typeclass by hand
 
 
 -- Lean implements this class, it's called `Add`
--- The `+` notation uses HAdd.hAdd; an Add instance supplies the usual case.
+-- The `+` notation is syntactic sugar on top of HAdd.hAdd;
+
 
 
 -- ## The power of parametrized typeclasses
@@ -282,11 +271,11 @@ instance : Neg Integer where
   neg F := by
     sorry
 
+
 -- What tactic should I use?
 -- 1. If the proof is "very tedious application of logical rules", use grind
 -- 2. If the proof is transitivity + chaining of inequalities use gcongr
--- 3. If it "should be obvious" but uses complicated lemas use aesop
--- 4. If you want to bring things to a "normal form" use simp
+-- 3. If you want to bring things to a "normal form" use simp
 
 instance : PartialOrder Integer where
   le x y := ((x.negative ∧ (¬ y.negative))∨
@@ -300,13 +289,17 @@ instance : PartialOrder Integer where
   le_trans := by
     sorry
 
--- ## Should I use classes or records?
+
+
+-- ## When should I use classes vs structures?
 
 #print Semigroup
 #print Semigroup'
 
 
 -- ## Dependency hyerarchies
+
+-- same as before.
 
 class Group'' (A : Type) extends Semigroup A, Inv A where
   e : A
@@ -321,6 +314,42 @@ class Group'' (A : Type) extends Semigroup A, Inv A where
 
 -- ## Some recurring typeclasses
 
+-- OfNat: numeric literals; ToString: strings; Repr: printing values with #eval.
+-- Inhabited: a default value; BEq: a Boolean equality test.
+-- DecidableEq: an equality test carrying a proof of its answer.
+
+/-
+### Coercions
+-/
+
+-- Coe: use a value of one type where another is expected.
+instance (α : Type) : Coe (Point α) (α × α) where
+  coe a := by
+    sorry
+
+#check (t : Nat × Nat)
+
+-- The @[coe] tag is for the pretty-printer; it does not register an instance.
+@[coe]
+def toProduct {α : Type} (a : Point α) : (α × α) := (a.x, a.y)
+
+-- CoeSort: use a structure as a type.
+instance : CoeSort Semigroup' Type where
+  coe S := S.carrier
+
+example (S : Semigroup') (a : S) : S.carrier := a
+
+-- CoeFun: use a structure as a function.
+-- A morphism of semigroups is a function preserving multiplication.
+structure Morphism (S T : Semigroup') where
+  toFun : S → T
+  -- Add the condition that toFun preserves multiplication.
+
+instance (S T : Semigroup') : CoeFun (Morphism S T) (fun _ => S → T) where
+  coe f := by sorry
+
+example (S T : Semigroup') (f : Morphism S T) (a : S) : T := f a
+
 /-
 ### Decidable propositions
 -/
@@ -329,17 +358,21 @@ class Group'' (A : Type) extends Semigroup A, Inv A where
 #check Decidable.isTrue
 #check Decidable.isFalse
 
--- A decision is data: either a proof of P, or a proof of ¬ P.
+-- Decidable P comes with two constructors, either .isTrue or .isFalse.
 
-def chooseIf (P : Prop) [h : Decidable P] (a b : Nat) : Nat :=
-  by sorry
+def chooseIf (P : Prop) [h : Decidable P] (a b : Nat) : Nat := sorry
 
 -- This is what `if P then a else b` does.
 #reduce chooseIf (2 < 3) 10 20
 
--- The `deriving DecidableEq` on Color generated a decision procedure.
-#synth DecidableEq Color
-#eval if Color.red = Color.blue then 10 else 20
+/-
+### Deriving instances
+-/
+
+-- Lean can generate some instances for us: Repr for printing, DecidableEq for equality.
+-- Go back and add `deriving Repr, DecidableEq` below the constructors of Color.
+-- #synth DecidableEq Color
+-- #eval if Color.red = Color.blue then 10 else 20
 
 -- We can also use the computation to prove something.
 example : Color.red ≠ Color.blue := by
@@ -347,17 +380,3 @@ example : Color.red ≠ Color.blue := by
 
 #check Classical.propDecidable
 -- Classical reasoning supplies decisions too, but not an executable test.
-
-
--- ### Coercion
--- There is a type class called Coe which records "Things that can be coerced into"
-instance (α : Type) : Coe (Point α) (α × α) where
-  coe a := by
-    sorry
-
-#check (t : Nat × Nat)
-
-
--- The @[coe] tag helps the pretty-printer recognize a coercion; it does not register an instance.
-@[coe]
-def toProduct {α : Type} (a : Point α) : (α × α ) := (a.x, a.y)
