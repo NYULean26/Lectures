@@ -592,7 +592,7 @@ def ballVolume (n t : ℕ) : ℕ :=
 
 #eval ballVolume 7 1 -- Expected: 8
 
-theorem hammingBall_card (u : Codeword n F₂) (t : ℕ) :
+theorem ball_card_invariant (u : Codeword n F₂) (t : ℕ) :
     (hammingBall u t).card = ballVolume n t := by
   unfold ballVolume
 
@@ -653,7 +653,7 @@ theorem hamming_bound (C : Code n F₂) (t : ℕ)
 
   have balls_have_same_size :
       ∑ c ∈ C, (hammingBall c t).card = C.card * ballVolume n t :=
-    Finset.sum_const_nat (fun c _ => hammingBall_card c t)
+    Finset.sum_const_nat (fun c _ => ball_card_invariant c t)
 
   have balls_are_pairwise_disjoint :
       (↑C : Set (Codeword n F₂)).PairwiseDisjoint (fun c => hammingBall c t) := by

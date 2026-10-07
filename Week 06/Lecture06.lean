@@ -96,22 +96,6 @@ def disagreements (u v : Codeword n α) : Finset (Fin n) := by
 What should `simp` know about disagreements?
 -/
 
-@[simp] theorem mem_disagreements (u v : Codeword n α) (i : Fin n) :
-    i ∈ disagreements u v ↔ u i ≠ v i := by
-  sorry
-
-@[simp] theorem disagreements_self (u : Codeword n α) :
-    disagreements u u = ∅ := by
-  sorry
-
-@[simp] theorem disagreements_eq_empty (u v : Codeword n α) :
-    disagreements u v = ∅ ↔ u = v := by
-  sorry
-
--- The positions where u and v differ do not depend on their order.
-theorem disagreements_comm (u v : Codeword n α) :
-    disagreements u v = disagreements v u := by
-  sorry
 
 /-- Hamming distance: the number of positions where two codewords differ. -/
 def hammingDist (u v : Codeword n α) : ℕ := by
@@ -126,18 +110,7 @@ def hammingDist (u v : Codeword n α) : ℕ := by
 def hammingWeight [Zero α] (u : Codeword n α) : ℕ := by
   sorry
 
-@[simp] theorem hammingDist_self (u : Codeword n α) :
-    hammingDist u u = 0 := by
-  sorry
-
-@[simp] theorem hammingDist_eq_zero (u v : Codeword n α) :
-    hammingDist u v = 0 ↔ u = v := by
-  sorry
-
-theorem hammingDist_comm (u v : Codeword n α) :
-    hammingDist u v = hammingDist v u := by
-  sorry
-
+-- What should `simp` know about Hamming distance?
 /-!
 ### The Triangle Inequality
 
@@ -145,12 +118,8 @@ Prove that `hammingDist` satisfies the triangle inequality.
 
 **Hint:** If u i ≠ w i, then either u i ≠ v i or v i ≠ w i (or both).
 Therefore {i | u i ≠ w i} ⊆ {i | u i ≠ v i} ∪ {i | v i ≠ w i}.
-Use `Finset.card_le_card` and `Finset.card_union_le`.
 -/
 
-theorem disagreements_subset_union (u v w : Codeword n α) :
-    disagreements u w ⊆ disagreements u v ∪ disagreements v w := by
-  sorry
 
 theorem hammingDist_triangle (u v w : Codeword n α) :
     hammingDist u w ≤ hammingDist u v + hammingDist v w := by
@@ -208,7 +177,7 @@ def minimumDistance (C : Code n α) : WithTop ℕ := by
 
 theorem minimumDistance_le {C : Code n α} {u v : Codeword n α}
     (hu : u ∈ C) (hv : v ∈ C) (hne : u ≠ v) :
-    minimumDistance C ≤ ↑(Codeword.hammingDist u v) := by
+    minimumDistance C ≤ Codeword.hammingDist u v := by
   sorry
 
 end Code
@@ -292,8 +261,10 @@ As with the parity code, we work over `ZMod 2`. Here the condition Hx = 0
 is a system of three linear equations, rather than a single parity equation.
 -/
 
-def H : Matrix (Fin 3) (Fin 7) F₂ := by
-  sorry
+def H : Matrix (Fin 3) (Fin 7) F₂ :=
+  !![0, 0, 0, 1, 1, 1, 1;
+     0, 1, 1, 0, 0, 1, 1;
+     1, 0, 1, 0, 1, 0, 1]
 
 /-!
 ### Linear Codes
@@ -345,11 +316,6 @@ If zero is the only codeword, both minima are `⊤`.
 
 /-- The smallest weight of a nonzero codeword; ⊤ if there are none. -/
 def minimumWeight [Zero α] (C : Code n α) : WithTop ℕ := by
-  sorry
-
-theorem Codeword.hammingDist_eq_weight_sub {R : Type} [Ring R] [DecidableEq R]
-    (x y : Codeword n R) :
-    Codeword.hammingDist x y = Codeword.hammingWeight (x - y) := by
   sorry
 
 theorem minimumDistance_eq_minimumWeight {R : Type} [CommRing R] [Fintype R]
@@ -543,7 +509,7 @@ def ballVolume (n t : ℕ) : ℕ := by
 
 -- #eval ballVolume 7 1 -- Expected: 8
 
-theorem hammingBall_card (u : Codeword n F₂) (t : ℕ) :
+theorem ball_card_invariant (u : Codeword n F₂) (t : ℕ) :
     (hammingBall u t).card = ballVolume n t := by
   sorry
 
