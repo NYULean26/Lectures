@@ -657,8 +657,8 @@ the new state.
 example (a : α) (s : σ) : (pure a : StateM σ α) s = (a, s) := by
   rfl
 
-example (action : StateM σ α) (next : α → StateM σ β) (s : σ) :
-    (action >>= next) s = (let (a, s') := action s; next a s') := by
+example (computation : StateM σ α) (next : α → StateM σ β) (s : σ) :
+    (computation >>= next) s = (let (a, s') := computation s; next a s') := by
   rfl
 
 -- Reading returns the current state; writing replaces it.
@@ -693,5 +693,28 @@ instance : LawfulMonad' (StateM σ) where
   bind_assoc _ _ _ := rfl
 
 #synth LawfulMonad' (StateM ℕ)
+
+
+
+/-
+# Counting arithmetic operations
+
+Let us use the state to count the arithmetic operations in our evaluator.
+We charge one unit for each addition, subtraction, multiplication, or division.
+Constants and variables cost zero in this model.
+
+Use Expr.evalM with an operation handler that increments the counter
+and returns the result of Operation.eval.
+-/
+
+def Operation.evalCount (op : Operation) (a b : ℚ) : StateM ℕ ℚ := do
+  let _ ← increment 1
+  pure (op.eval a b)
+
+-- The pair contains the value of the expression and the final counter.
+#eval Expr.evalM Operation.evalCount ((x + 2) / y) values 0 -- (4, 2)
+#eval Expr.evalM Operation.evalCount ((x + 2) / y) values 10 -- (4, 12)
+
+
 
 end Week07
