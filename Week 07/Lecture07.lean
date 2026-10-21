@@ -42,7 +42,7 @@ def e : Expr String := Expr.prim .plus x (Expr.const 2)
 ## Some notation
 
 We have already seen how typeclasses let us use + and *.
-Here they just build expressions. We fill these in for you.
+Here they just build expressions.
 -/
 
 instance (α: Type) : Add (Expr α) where add a b := Expr.prim .plus a b
@@ -149,7 +149,7 @@ Let us look at the same problem somewhere else.
 We want the first, third, fifth and seventh entries of a list.
 An entry might be missing. How should we handle that?
 
-This follows FPiL 4.1.1. The indices start at zero.
+List indices start at zero.
 -/
 
 def entries : List ℕ := [10, 20, 30, 40, 50, 60, 70]
@@ -304,7 +304,6 @@ def firstThirdFifthSeventhDo (xs : List α) : Option (α × α × α × α) := b
 -- #eval firstThirdFifthSeventhDo entries -- some (10, 30, 50, 70)
 -- #eval firstThirdFifthSeventhDo [10, 20] -- none
 
--- := names an ordinary value. The arrow sequences a computation.
 def firstPlusOne (xs : List ℕ) : Option ℕ := do
   let attempt := xs[0]? -- attempt : Option ℕ
   let a ← attempt       -- a : ℕ
@@ -395,7 +394,7 @@ instance : LawfulMonad' Option' where
 /-
 ## Using the same program with different effects
 
-Option tells us that something failed. Except can also tell us why.
+Except lets us attach an error message to a failure.
 
   Except.ok a    : a successful result
   Except.error e : an error
@@ -441,7 +440,7 @@ def Expr.evalM [Monad m] (applyOp : Operation → ℚ → ℚ → m ℚ)
 -- #eval Expr.evalM Operation.evalExcept (bad + 1) values
 -- #eval Expr.evalM Operation.evalExcept ((0 : Expr String) * bad) values
 
--- Id has no effects. The same traversal gives our ordinary evaluator.
+-- Run the same traversal in Id to recover the ordinary evaluator.
 -- #eval Expr.evalM (m := Id) (fun op a b => op.eval a b) ((x + 2) / y) values
 
 
@@ -449,8 +448,7 @@ def Expr.evalM [Monad m] (applyOp : Operation → ℚ → ℚ → m ℚ)
 /-
 # Basic examples of Monads
 
-We have used monads to handle failure. Let us compare that with a few
-other examples. What changes is the effect that pure and bind keep track of.
+Let us run the same program with different effects.
 
 Following FPiL 4.1–4.2 and LoVe 7.4–7.6.
 -/
@@ -458,9 +456,7 @@ Following FPiL 4.1–4.2 and LoVe 7.4–7.6.
 /-
 ## No effects: Id
 
-Id α is just α. For this monad, pure returns its argument and bind
-is ordinary function application. This lets us use an interface written
-for monads with an ordinary value.
+Id α is α, so pure is the identity function and bind is function application.
 -/
 
 #synth Monad Id
@@ -488,11 +484,11 @@ def addOne [Monad m] (action : m ℕ) : m ℕ := do
 /-
 ## Failure: Option and Except
 
-For Option, pure is some. Bind propagates none; otherwise it calls
-the next computation with the value inside some.
+For Option, pure is some, and bind either propagates none or passes the
+value inside some to the next computation.
 
-For Except ε, pure is Except.ok. Bind propagates an error of type ε;
-otherwise it calls the next computation with the value inside Except.ok.
+For Except ε, pure is Except.ok, and bind either propagates an error of
+type ε or passes the value inside Except.ok to the next computation.
 The error type is fixed throughout a sequence of computations.
 -/
 
@@ -520,11 +516,11 @@ A program that uses a mutable variable can be represented by a function:
   StateM σ α = σ → (α × σ)
 
 It takes the initial state and returns a pair: the result first, then the
-final state. Lean provides StateM and its Monad instance.
+final state.
 
 pure returns a value without changing the state.
 Bind passes the first result to the next computation, and also passes along
-the new state. The following equations show exactly what this means.
+the new state.
 -/
 
 #synth Monad (StateM ℕ)
