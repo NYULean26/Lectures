@@ -62,7 +62,7 @@ abbrev F₂ := ZMod 2
 
 def codeOfParityCheck {R : Type} [CommRing R] [Fintype R] [DecidableEq R]
     {n m : ℕ} (φ : Codeword n R →ₗ[R] Codeword m R) : Code n R :=
-  {word | φ word = 0}
+  Finset.univ.filter (fun word => φ word = 0)
 
 def H : Matrix (Fin 3) (Fin 7) F₂ :=
   !![0, 0, 0, 1, 1, 1, 1;
