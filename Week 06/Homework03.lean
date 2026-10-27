@@ -21,23 +21,6 @@ statements. We encourage you to:
 3. Talk with the LLM to optimize the proofs as much as possible: simplify
    the arguments, remove unnecessary steps, and understand each remaining step.
 
-For every proof on which you use an LLM, explain exactly what you did:
-identify the tool/model, record your prompts and follow-up requests, describe
-what it produced and what you changed, and explain how you checked and
-understood the final proof. If you used no LLMs, say so.
-
-Lean accepting a statement only means that it is well-typed, not that it is
-true. Check your statements against small examples and boundary cases.
-For each theorem you state, add a sentence explaining it in ordinary language.
-
-We covered Parts 1 and 2 of Lecture 6 in class. This homework starts with
-Part 3: error detection and correction. Work through Sections 1–3 below;
-Section 4, on the bounds from Part 4 of the lecture, is an optional extension.
-If you attempt Section 4, prove its theorem statements as well.
-You may use classical reasoning, but try to keep finite constructions
-computable so that you can explore them with `#eval`.
-
-This file is self-contained. The following definitions are supplied from class.
 -/
 
 abbrev Codeword (n : ℕ) (α : Type) := Fin n → α
