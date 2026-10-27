@@ -111,8 +111,8 @@ def IsDecoder {C : Code n α} (φ : Codeword n α → C) (t : ℕ) : Prop := sor
 def DoesErrorRecovery (C : Code n α) (t : ℕ) : Prop := sorry
 
 /-!
-State that a nonempty code admits t-error recovery if 2t is strictly below
-its minimum distance. Include the nonemptiness hypothesis: the decoder must
+State that a nonempty code admits t-error recovery if and only if 2t is
+strictly below its minimum distance. Include the nonemptiness hypothesis: the decoder must
 return a member of C even when no codeword is nearby.
 
 State that the length-three repetition code and the Hamming code each
