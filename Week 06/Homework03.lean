@@ -135,8 +135,9 @@ one knows which data (positions) were lost. We define `DoesErasureRecovery C t`
 to say that any two members of C agreeing outside a set of at most t erased
 positions are equal.
 
-State the minimum-distance condition guaranteeing recovery from t erasures,
-and state that the Hamming code recovers from two erasures.
+State that a code recovers from t erasures if and only if t is strictly
+below its minimum distance. Then state that the Hamming code recovers
+from two erasures.
 
 Written check: compare the distance thresholds for errors and erasures.
 Check your definitions at t = 0. Can the empty code satisfy erasure recovery?
@@ -147,6 +148,7 @@ def DoesErasureRecovery (C : Code n α) (t : ℕ) : Prop := sorry
 
 theorem erasure_recovery : (sorry : Prop) := by sorry
 
+-- Given `erasure_recovery`, the proof below should take two lines using `decide +kernel`.
 theorem hammingCode74_erasure_recovers : (sorry : Prop) := by sorry
 
 /-!
