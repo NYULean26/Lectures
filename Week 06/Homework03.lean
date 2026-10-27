@@ -9,7 +9,7 @@ The goal is to translate mathematics into precise Lean definitions and
 statements, and then prove the statements. Replace `sorry` in definitions
 with actual definitions; in theorem declarations, replace `(sorry : Prop)`
 with the statement you want to make and `by sorry` with a complete Lean proof.
-Proofs are required for every theorem in Sections 1–3, but the proofs will
+Proofs are required for every theorem, but the proofs will
 not be graded.
 
 Write all definitions and theorem statements yourself, without LLM assistance.
@@ -152,7 +152,7 @@ theorem erasure_recovery : (sorry : Prop) := by sorry
 theorem hammingCode74_erasure_recovers : (sorry : Prop) := by sorry
 
 /-!
-## 4. Optional extension: bounds on code size
+## 4. Bounds on code size
 
 Define `ballVolume n t` as the number of binary words within distance t of
 the zero word. State the following results, with their hypotheses:
