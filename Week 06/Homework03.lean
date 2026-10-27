@@ -122,6 +122,7 @@ correct one error. No decoder construction or proof is required.
 
 theorem exists_error_recovery : (sorry : Prop) := by sorry
 
+-- Given `exists_error_recovery`, each proof below should take 2–3 lines using `decide +kernel`.
 theorem repetition_three_recovers : (sorry : Prop) := by sorry
 
 theorem hammingCode74_recovers : (sorry : Prop) := by sorry
