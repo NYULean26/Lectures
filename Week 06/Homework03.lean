@@ -3,7 +3,7 @@ import Mathlib
 namespace Homework03
 
 /-!
-# Homework 3 (draft): Stating results about error-correcting codes
+# Homework 3: Stating results about error-correcting codes
 
 The goal is to translate mathematics into precise Lean definitions and
 statements. No proofs are required. Replace `sorry` in definitions with
