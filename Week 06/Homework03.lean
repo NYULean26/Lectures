@@ -6,9 +6,25 @@ namespace Homework03
 # Homework 3: Stating results about error-correcting codes
 
 The goal is to translate mathematics into precise Lean definitions and
-statements. No proofs are required. Replace `sorry` in definitions with
-actual definitions; in theorem declarations, replace `(sorry : Prop)` with
-the statement you want to make and leave the proof as `by sorry`.
+statements, and then prove the statements. Replace `sorry` in definitions
+with actual definitions; in theorem declarations, replace `(sorry : Prop)`
+with the statement you want to make and `by sorry` with a complete Lean proof.
+Proofs are required for every theorem in Sections 1–3, but the proofs will
+not be graded.
+
+Write all definitions and theorem statements yourself, without LLM assistance.
+You may use LLMs ONLY for the proofs, after writing your definitions and
+statements. We encourage you to:
+
+1. First try to write the proofs by hand.
+2. Write proofs with an LLM.
+3. Talk with the LLM to optimize the proofs as much as possible: simplify
+   the arguments, remove unnecessary steps, and understand each remaining step.
+
+For every proof on which you use an LLM, explain exactly what you did:
+identify the tool/model, record your prompts and follow-up requests, describe
+what it produced and what you changed, and explain how you checked and
+understood the final proof. If you used no LLMs, say so.
 
 Lean accepting a statement only means that it is well-typed, not that it is
 true. Check your statements against small examples and boundary cases.
@@ -17,6 +33,7 @@ For each theorem you state, add a sentence explaining it in ordinary language.
 We covered Parts 1 and 2 of Lecture 6 in class. This homework starts with
 Part 3: error detection and correction. Work through Sections 1–3 below;
 Section 4, on the bounds from Part 4 of the lecture, is an optional extension.
+If you attempt Section 4, prove its theorem statements as well.
 You may use classical reasoning, but try to keep finite constructions
 computable so that you can explore them with `#eval`.
 
@@ -115,8 +132,8 @@ State that a nonempty code admits t-error recovery if and only if 2t is
 strictly below its minimum distance. Include the nonemptiness hypothesis: the decoder must
 return a member of C even when no codeword is nearby.
 
-State that the length-three repetition code and the Hamming code each
-correct one error. No decoder construction or proof is required.
+State and prove that the length-three repetition code and the Hamming code
+each correct one error by applying your general result.
 
 -/
 
@@ -168,9 +185,8 @@ Specialize both bounds to the length-seven Hamming code: with one error
 the first gives 16; with two erasures the second gives 32. State these two
 inequalities as Lean examples. Explain why these upper bounds are compatible.
 
-Optional proofs: prove one membership criterion, or prove `unique_nearby`
-using the triangle inequality. Formalizing a `MetricSpace` instance and
-proving the counting bounds are not required.
+For `unique_nearby`, you may use the Hamming-distance triangle inequality
+from class. Formalizing a `MetricSpace` instance is not required.
 -/
 
 def ballVolume (n t : ℕ) : ℕ := sorry
