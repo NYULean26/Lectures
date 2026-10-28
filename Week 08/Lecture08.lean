@@ -24,7 +24,9 @@ def readRow : IO RawInput := do
   let y ← stdin.getLine
   pure { x, y }
 
--- Run the read checkpoint in a terminal; main is at the bottom.
+/- Run in a terminal from the repository root:
+lake env lean --run 'Week 08/Lecture08.lean' read
+-/
 def preview : IO Unit := do
   let raw ← readRow
   IO.println s!"x = {raw.x.trimAscii}, y = {raw.y.trimAscii}"
