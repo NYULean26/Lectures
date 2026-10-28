@@ -79,10 +79,10 @@ inductive Validate (α : Type) where
   | errors : List String → Validate α
   deriving Repr, BEq
 
-def checkInteger (field text : String) : Validate Int :=
+def checkInteger (fieldName text : String) : Validate Int :=
   match text.trimAscii.toString.toInt? with
   | some n => .ok n
-  | none => .errors [s!"{field}: expected an integer"]
+  | none => .errors [s!"{fieldName}: expected an integer"]
 
 #eval checkInteger "x" " 6 "
 #eval checkInteger "y" "two"
