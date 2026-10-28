@@ -7,7 +7,7 @@
 - [Instructor copy](Lecture08_Instructor.lean)
 
 Open each Lean file independently in this repository's Lean environment.
-Fill a definition, then uncomment its checks.
+Fill a definition, then uncomment its checks. Sections A–E are the core; F–I are optional.
 
 From the repository root, run the first checkpoint before filling any holes:
 
@@ -21,8 +21,10 @@ Enter `6`, then `2`, on separate lines.
 | --- | --- |
 | `read` | Immediately |
 | `check` | B1, C1, C2, D1 are complete |
-| `run` | B1, C1, C2, D1, F1 are complete |
+| `run` (optional) | B1, C1, C2, D1, F1 are complete |
 | `even` | Supplied optional demonstration |
+
+To demonstrate the full report without completing optional F1, use the solution file.
 
 For `check` and `run`, enter two lines per row (`x`, then `y`), ending with EOF
 (Ctrl-D on an empty terminal line). Proof holes may remain; running an unfinished

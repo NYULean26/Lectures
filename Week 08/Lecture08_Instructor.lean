@@ -4,9 +4,9 @@ namespace Week08Validation
 
 /- # A table of calculations -/
 
--- Teaching route: slides 1–8, then A–F. Open option-prime-reference.lean for
+-- Teaching route: slides 1–8, then A–E. Open option-prime-reference.lean for
 -- one representative law proof; the other proofs remain available for questions.
--- Use slides 10–12 beside F. Slide 9 and G–I are optional after the program runs.
+-- F–I are optional. Use slides 10–12 beside F and slide 9 with G or H.
 
 structure RawInput where
   x : String
@@ -296,9 +296,10 @@ def exampleInput : Input := ⟨1, 6, 2⟩
   (counted (fun op a b => pure (op.eval a b))) exampleInput.values : StateM Nat ℚ).run 0)
 #eval runBatch earlyFailure [exampleInput]
 
-/- ## F. Print the report -/
+/- ## F. Optional: print the report -/
 
--- Instructor: Validate the complete table first. Any input errors prevent evaluation.
+-- Instructor: Optional after A–E. To demonstrate the report without F1, run the solution.
+-- Validate the complete table first. Any input errors prevent evaluation.
 -- Read the supplied report briefly; students only implement the printing loop.
 -- The run checkpoint produces the completed application.
 -- Place printLines and printLinesBind beside each other: the empty list becomes
@@ -334,7 +335,7 @@ def report (rows : List RawInput) : List String :=
 #guard report [⟨"6", "2"⟩, ⟨"4", "0"⟩, ⟨"8", "2"⟩] ==
   ["row 2: division by zero", "Operations: 4"]
 
--- F1. Print each line using for in IO.
+-- F1 (optional). Print each line using for in IO.
 def printLines (lines : List String) : IO Unit := do
   for line in lines do
     IO.println line
@@ -357,7 +358,7 @@ def readRows : IO (List RawInput) := do
 
 /- ## G. Optional: where does the count go? -/
 
--- Instructor: Only after the core program runs, compare these two stack orders.
+-- Instructor: Optional after E; completing F is not required.
 -- Predict whether each error result can contain a count, then run the same input.
 -- Row 2 fails after four operations; row 3 is never evaluated.
 
@@ -383,7 +384,7 @@ def runDrop (e : Expr String) (inputs : List Input) : Except String (List ℚ ×
 
 /- ## H. Optional demonstration: an even integer -/
 
--- Instructor: Optional demonstration after the complete table program runs.
+-- Instructor: Optional demonstration after A–E; completing F is not required.
 -- Run the even checkpoint on 8, 7, and "hello"; no new exercise is needed.
 -- Even is Mathlib's predicate; EvenInt pairs an Int with a proof of that predicate.
 -- In the successful branch, h supplies the proof needed for ⟨n, h⟩.

@@ -201,7 +201,7 @@ def exampleInput : Input := ⟨1, 6, 2⟩
 --   (counted (fun op a b => pure (op.eval a b))) exampleInput.values : StateM Nat ℚ).run 0)
 -- #eval runBatch earlyFailure [exampleInput]
 
-/- ## F. Print the report -/
+/- ## F. Optional: print the report -/
 
 -- Supplied: turn validation and evaluation results into report lines.
 def report (rows : List RawInput) : List String :=
@@ -218,7 +218,7 @@ def report (rows : List RawInput) : List String :=
 -- #guard report [⟨"6", "2"⟩, ⟨"4", "0"⟩, ⟨"8", "2"⟩] ==
 --   ["row 2: division by zero", "Operations: 4"]
 
--- F1. Print each line using for in IO.
+-- F1 (optional). Print each line using for in IO.
 def printLines (lines : List String) : IO Unit := by
   sorry
 
