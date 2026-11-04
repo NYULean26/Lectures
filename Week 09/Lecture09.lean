@@ -386,18 +386,19 @@ example (a b : Prop) (ha : a) (hb : b) : a ∧ b := by
 macro "trace_goals" : tactic =>
   `(tactic| run_tac traceGoals)
 
-set_option linter.unusedTactic false in
+
 example (a b : Prop) (ha : a) (hb : b) : a ∧ b := by
   trace_goals
   apply And.intro
   all_goals assumption
+
 
 def trace : TacticM Unit := withMainContext do
   let lctx ← getLCtx
   for ldecl in lctx do
     logInfo m!"{ldecl.userName} : {ldecl.type}"
 
-set_option linter.unusedTactic false in
+
 example (a b : Prop) (h : a ∧ b) : b ∧ a := by
   run_tac trace
   exact ⟨h.2, h.1⟩
@@ -415,40 +416,32 @@ example (a b : Prop) (ha : a) (hb : b) : a ∧ b := by
 
 open Lean.Meta
 
--- LoVe's hypothesis tactic.
-def hypothesis : TacticM Unit := withMainContext do
-  let target ← getMainTarget
-  let lctx ← getLCtx
-  for ldecl in lctx do
-    if !ldecl.isImplementationDetail then
-      let eq ← isDefEq ldecl.type target
-      if eq then
-        let goal ← getMainGoal
-        goal.assign ldecl.toExpr
-        return
-  failure
+
+def hypothesis : TacticM Unit := sorry
 
 -- run_tac executes the function in the current proof state.
-example (a : Prop) (ha : a) : a := by
-  run_tac hypothesis
+-- example (a : Prop) (ha : a) : a := by
+--  run_tac hypothesis
 
--- elab gives the function its own tactic syntax.
-elab "hypothesis" : tactic => hypothesis
 
-example (a : Prop) (ha : a) : a := by
-  hypothesis
 
 -- A macro can instead expand to run_tac hypothesis.
 macro "hypothesis_macro" : tactic => `(tactic| run_tac hypothesis)
 
-example (a : Prop) (ha : a) : a := by
-  hypothesis_macro
+-- example (a : Prop) (ha : a) : a := by
+--  hypothesis_macro
 
 /-
 hypothesis_macro  →  run_tac hypothesis  →  execute hypothesis
                  macro expansion         tactic elaboration
 
 -/
+
+-- elab gives the function its own tactic syntax.
+elab "hypothesis" : tactic => hypothesis
+
+--example (a : Prop) (ha : a) : a := by
+--   hypothesis
 
 /- ## I. Conjunctions in the hypotheses -/
 
@@ -478,4 +471,3 @@ example (a b c d : Prop) (h₁ : a ∧ (b ∧ c)) (h₂ : d ∧ a) :
   sorry
 
 end Week09
-
