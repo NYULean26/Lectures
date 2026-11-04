@@ -144,7 +144,8 @@ scoped syntax:10 term:10 " ANDNOT " term:11 : term
 
 #check Lean.Syntax
 
--- We can pattern-match syntax.
+-- The pattern `($l ANDNOT $r) captures the two term subtrees.
+-- Return some (l, r) for that pattern, and none otherwise.
 def isAndNot : Syntax → Option (Syntax × Syntax) := by
   sorry
 
@@ -182,6 +183,9 @@ namespace AndNot
 -/
 
 /- Constructing syntax. -/
+
+-- macro_rules pairs a quotation pattern with a replacement quotation.
+-- $l and $r insert the captured syntax into the replacement.
 
 
 -- #guard (true ANDNOT true) = false
@@ -340,13 +344,14 @@ example (a b c d : Prop) (ha : a) (hb : b) (hc : c) (hd : d) :
   repeat' apply And.intro
   all_goals assumption
 
+-- intro_and abbreviates repeat' apply And.intro.
 -- repeat' apply And.intro leaves goals a, b, c, and d.
 -- assumption closes each using its corresponding hypothesis.
 
 example (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) : b ∧ d := by
   sorry
 
--- Split conjunctions, then close each goal by assumption.
+-- solve_and combines intro_and with all_goals assumption.
 
 theorem test_solve_and (a b c : Prop) (ha : a) (hb : b) (hc : c) :
     b ∧ (a ∧ (c ∧ b)) := by
@@ -447,7 +452,18 @@ hypothesis_macro  →  run_tac hypothesis  →  execute hypothesis
 
 /- ## I. Conjunctions in the hypotheses -/
 
+-- isAppOfArity ``And 2 recognizes a type of the form And a b.
+#check Lean.Expr.isAppOfArity
+#check LocalDecl.fvarId
+
+-- goal.cases ldecl.fvarId returns an array of resulting subgoals.
+#check MVarId.cases
+-- Each subgoal has a .mvarId field for the list passed to replaceMainGoal.
+#check replaceMainGoal
+
 -- Split conjunctions in the hypotheses, including nested ones.
+-- After replacing the main goal, restart the scan in the new context.
+-- When no conjunction remains, return successfully.
 -- ``And resolves the declaration name; here it equals `And, since And is in the root namespace.
 partial def expandAnd : TacticM Unit := by
   sorry
