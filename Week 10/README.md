@@ -130,20 +130,30 @@ reconstruction can fail even for a nonnegative polynomial.
 
 ## Before class
 
-Use the pinned Lean version, `v4.34.0-rc2`, and Python 3.11 or newer.
+Use the pinned Lean version, `v4.34.0-rc2`, and Python 3.10 or newer.
 Install the Python packages once before class; the solver then runs locally.
 Open **the repository root** in the editor: file and process paths are relative
 to that directory. The process wrapper uses `.venv-sos/bin/python`.
 
 ```sh
-python3 -m venv .venv-sos
-.venv-sos/bin/python -m pip install -r 'Week 10/requirements-sos.txt'
-.venv-sos/bin/python 'Week 10/find_sos.py' < 'Week 10/triangle-problem.json'
+bash 'Week 10/setup_sos.sh'
 .venv-sos/bin/python 'Week 10/test_find_sos.py'
 lake env lean 'Week 10/Lecture10.lean'
 lake env lean 'Week 10/Lecture10_Solution.lean'
 lake env lean 'Week 10/Lecture10_Instructor.lean'
 ```
+
+On Debian/Ubuntu, if creating the environment fails because `ensurepip` is
+missing, install the venv package matching your Python version. For Python 3.10:
+
+```sh
+sudo apt update
+sudo apt install python3.10-venv
+bash 'Week 10/setup_sos.sh'
+```
+
+The setup script can be rerun after a failed attempt; it creates or repairs the
+environment, installs the pinned dependencies, and checks the triangle example.
 
 The search prints a JSON array of weighted affine squares, using
 `[numerator, denominator]` pairs. In each affine form, the constant precedes

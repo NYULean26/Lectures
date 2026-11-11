@@ -18,6 +18,17 @@ def var(i):
 
 
 class SOSProtocolTests(unittest.TestCase):
+    def test_missing_dependencies(self):
+        out = subprocess.run(
+            [sys.executable, "-S", str(Path(__file__).with_name("find_sos.py"))],
+            capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(out.returncode, 1)
+        self.assertEqual(out.stdout, "")
+        self.assertIn("Missing SOS Python dependency: numpy", out.stderr)
+        self.assertIn("bash 'Week 10/setup_sos.sh'", out.stderr)
+        self.assertNotIn("Traceback", out.stderr)
+
     def search(self, n, expression):
         return subprocess.run(
             [sys.executable, str(Path(__file__).with_name("find_sos.py"))],

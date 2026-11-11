@@ -3,9 +3,16 @@
 import json
 import sys
 
-import numpy as np
-import sympy as sp
-from SumOfSquares import SOSProblem
+try:
+    import numpy as np
+    import sympy as sp
+    from SumOfSquares import SOSProblem
+except ModuleNotFoundError as error:
+    sys.exit(
+        f"Missing SOS Python dependency: {error.name}.\n"
+        "From the LeanClass repository root, run:\n"
+        "  bash 'Week 10/setup_sos.sh'"
+    )
 
 
 class NoCertificate(Exception):
