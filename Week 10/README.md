@@ -165,7 +165,7 @@ subprocess work. The final theorem contains a proof term, with no Python call.
 | Local context | 3.3 | h has type P in one goal and Q in another |
 | Reduction | 4.2 | Same expression at four transparencies; weak-head versus full reduction; defeq |
 | `inferMetavar` | 4.2 | Observe unification assigning the unknown |
-| `my_interval_cases h` | 4.2.1 | Extract the bound and variable from h, then reuse the warmup macro |
+| `my_interval_cases_2 h` | 4.2.1 | Extract the bound and variable from h, then reuse the warmup macro |
 | `hypothesis` | 4.3 | Assign a local proof, update the goal list, or report failure |
 | Implicit arguments | 5 | mkAppM given hp/hq constructs an application with P/Q/hp/hq |
 | `split_and` | 5.1–5.2 | Expose Both using whnf; split twice with the handwritten adapter and retain R |
@@ -215,11 +215,10 @@ a small `exact_term`, inspect expected-type inference, and reject an unfinished
 term. Section 9 immediately reuses `exactTerm`.
 Connect the slide to the examples in the Lean file.
 
-Use the precise name **TermElabM** when it becomes relevant. The code calls the
-tactic-facing helpers: `elabTermEnsuringType` checks compatibility with the expected
-type and completes synthetic metavariable synthesis. Then use `closeMainGoal`
-to reject any remaining holes. `withoutRecover` propagates checking errors.
-These details are in the instructor notes.
+Use the precise name **TermElabM** when it becomes relevant. Reuse `elabTerm`
+with the goal's target as the expected type, then use `inferType` and `isDefEq`
+to check the resulting proof's type. `closeMainGoal` rejects remaining holes
+and closes the goal. These steps are explained in the instructor notes.
 
 Defer command elaborators, registration attributes, postponement, and the full
 transformer stack. Mention CommandElabM only if asked about commands such as

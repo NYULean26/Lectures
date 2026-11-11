@@ -386,7 +386,9 @@ example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
 
 /- Instructor: Show slide 5 alongside 4.2, following MPiL's order:
 full normalisation, transparency, then weak-head normalisation.
-First run traceUnfolding. Predict: numberAlias; number; hiddenNumber; 7.
+The student file starts with one traceUnfolding call. Vary the name and mode live.
+For numberAlias, predict: numberAlias; number; hiddenNumber; 7.
+Double backticks resolve the name to Week10.numberAlias before passing it to mkConst.
 The operation is always reduceAll: only the unfolding policy changes.
 Use the slide's table to predict how much each transparency mode unfolds.
 The same expression therefore has different normal forms at different transparencies.
@@ -423,14 +425,14 @@ may unfold when reducing an expression. -/
 def number : Nat := hiddenNumber
 abbrev numberAlias : Nat := number
 
-def traceUnfolding (mode : TransparencyMode) : MetaM Unit := do
-  let e := mkConst ``numberAlias
+def traceUnfolding (name : Name) (mode : TransparencyMode) : MetaM Unit := do
+  let e := mkConst name
   logInfo m!"{← withTransparency mode (reduceAll e)}"
 
-#eval traceUnfolding .none
-#eval traceUnfolding .reducible
-#eval traceUnfolding .default
-#eval traceUnfolding .all
+#eval traceUnfolding ``numberAlias .none
+#eval traceUnfolding ``numberAlias .reducible
+#eval traceUnfolding ``numberAlias .default
+#eval traceUnfolding ``numberAlias .all
 
 abbrev Both (P Q : Prop) : Prop := P ∧ Q
 
@@ -445,7 +447,7 @@ example (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
     logInfo m!"Definitionally equal: {← isDefEq target normal}"
   exact ⟨hp, hq⟩
 
--- Comparison can assign an unknown.
+-- Warning: isDefEq can assign metavariables to make the expressions match.
 def inferMetavar : MetaM Unit := do
   let x ← mkFreshExprMVar (mkConst ``Nat) (userName := `x)
   let e : Expr := .app (mkConst ``Nat.succ) x
@@ -455,31 +457,38 @@ def inferMetavar : MetaM Unit := do
 #eval inferMetavar
 
 /- Instructor: Spend three minutes revisiting 1.3 here. Follow the wrapper:
-lookup h1, infer its type, then whnf exposes Nat.le with two arguments.
+Define myIntervalCases_2 first, following last week's hypothesis example.
+Its argument is a Name, like the lookup operations already used in class.
+elab captures the written identifier; h.getId passes its name to the computation.
+After showing the two declarations, combine their bodies live if useful.
+Lookup h1, infer its type, then whnf exposes Nat.le with two arguments.
 app2? checks the head constant and returns its arguments. Nat.le fixes the type
 as Nat; require a local variable on the right to match the warmup's scope.
 The pattern ignores the lower bound and keeps the variable a.
 getUserName and mkIdent recover identifier syntax for the original macro.
-The low parser priority keeps the longer "k from h" syntax available.
-The lookup and matching code are prefilled; students add the last two lines.
+The lookup and matching code are prefilled; students add the last three lines.
 Use this in place of repeating the extra transparency modes. Revisit the input
 again in 6.1.1 once term elaboration is available.
 -/
 
 /- ### 4.2.1. Revisit interval_cases: read the bound -/
 
-elab (priority := low) "my_interval_cases " h:ident : tactic => withMainContext do
-  let proof ← getFVarFromUserName h.getId
-  let type ← whnf (← inferType proof)
-  let some (_, a) := type.app2? ``Nat.le
+def myIntervalCases_2 (h : Name) : TacticM Unit := withMainContext do
+  let ineq ← getFVarFromUserName h
+  let type ← whnf (← inferType ineq)
+  let some (_n, a) := type.app2? ``Nat.le
     | throwError "expected a natural-number lower bound"
   unless a.isFVar do
     throwError "expected a variable on the right of the bound"
   let k := mkIdent (← a.fvarId!.getUserName)
+  let h := mkIdent h
   evalTactic (← `(tactic| my_interval_cases $k from $h))
 
+-- elab connects tactic syntax to a TacticM computation.
+elab "my_interval_cases_2 " h:ident : tactic => myIntervalCases_2 h.getId
+
 example (k : Nat) (h1 : 1 ≤ k) (h2 : k ≤ 4) : k ∣ 12 := by
-  my_interval_cases h1
+  my_interval_cases_2 h1
   all_goals norm_num
 
 -- 4.3. Revisit hypothesis: update the goal list and report failure.
@@ -516,6 +525,8 @@ while retaining the others. Merely hiding a goal would not
 fill its proof hole. assign itself is not a type checker: check the type first.
 -/
 
+/- ## 5. Create subgoals and connect them to a proof -/
+
 /- Instructor: 49–62 minutes. 3.1 gave the intended term; now construct it.
 Before typing splitAndCore, read @And.intro's type. The complete expression has
 four arguments: P, Q, hp, hq. Run the mkAppM inspector, which is given only hp/hq;
@@ -546,8 +557,6 @@ Source: MPiL 9 exercises 1–2, especially forker; Macbeth Phase1_CoreLogic's ex
 goal-to-subgoals interface; Olšák–Gerbscheid's runConstructor.
 Break at minute 62. Keep the explanation of assignments even if later examples slip.
 -/
-
-/- ## 5. Create subgoals and connect them to a proof -/
 
 /-
 Now automate the refine step of 3.1.
@@ -625,10 +634,9 @@ elaboration of n + 1 does not require knowing n's value. This is not evaluation.
 Type 6.2. Reuse P ∧ Q, hp, hq: elaborate ⟨hp, hq⟩ instead of building And.intro
 with mkAppM. The Int example shows expected-type information for numerals.
 This is the focused answer to “how much ElabM?” Say TermElabM when discussing
-term syntax. We use Lean.Elab.Tactic.elabTermEnsuringType, whose wrapper completes
-synthetic metavariable synthesis. Explain the additional compatibility check
-in elabTermEnsuringType using the wrong-type example.
-withoutRecover makes failed checks raise errors instead of recovering with placeholders.
+term syntax. Reuse elabTerm from 6.1, now passing some target to guide elaboration.
+Then inferType and isDefEq check that the proof's type matches the goal.
+Use the wrong-type example to explain why the explicit check is needed.
 closeMainGoal rejects remaining metavariables in our small exact-like tactic.
 Lean's built-in exact has more nuanced treatment of pre-existing metavariables.
 Run both failure cases: a wrong type and an unresolved underscore.
@@ -648,7 +656,6 @@ This is the work of TermElabM. We call it through TacticM's term helpers.
 -/
 
 #check Lean.Elab.Tactic.elabTerm
-#check Lean.Elab.Tactic.elabTermEnsuringType
 #check closeMainGoal
 
 -- 6.1 (supplied). Predict the types before running this inspector.
@@ -664,7 +671,7 @@ example (n : Nat) : n = n := by
 
 /- Instructor: Spend two minutes wrapping the first revisit in have.
 The input is now a proof term. have elaborates it and adds a local hypothesis,
-then my_interval_cases reads that hypothesis using 4.2.1 unchanged.
+then my_interval_cases_2 reads that hypothesis using 4.2.1 unchanged.
 In the example, Nat.le_trans constructs a proof of 1 ≤ k from h1 : 2 ≤ k.
 Ask students to predict the new hypothesis's type before running the tactic.
 This connects the term-elaboration slide to a familiar tactic quotation.
@@ -673,23 +680,26 @@ Continue to exactTerm.
 
 /- ### 6.1.1. Revisit interval_cases: elaborate a proof -/
 
-elab "my_interval_cases_term " t:term : tactic => withoutRecover do
-  evalTactic (← `(tactic| (have hbound := $t; my_interval_cases hbound)))
+elab "my_interval_cases_term " t:term : tactic => do
+  evalTactic (← `(tactic| (have hbound := $t; my_interval_cases_2 hbound)))
 
 example (k : Nat) (h1 : 2 ≤ k) (h2 : k ≤ 4) : k ∣ 12 := by
   my_interval_cases_term (Nat.le_trans (by decide : 1 ≤ 2) h1)
   all_goals norm_num
 
 example (h : True) : True := by
-  fail_if_success my_interval_cases h
+  fail_if_success my_interval_cases_2 h
   fail_if_success my_interval_cases_term (0 : Nat)
   exact h
 
 -- 6.2. The goal's expected type helps elaborate the proof.
--- The tactic-facing helper also completes synthetic metavariable synthesis.
-def exactTerm (stx : Syntax) : TacticM Unit := withoutRecover <| withMainContext do
+-- isDefEq checks that the resulting type matches the goal.
+def exactTerm (stx : Syntax) : TacticM Unit := withMainContext do
   let target ← getMainTarget
-  let proof ← elabTermEnsuringType stx (some target)
+  let proof ← elabTerm stx (some target)
+  let type ← inferType proof
+  unless ← isDefEq type target do
+    throwError "the term's type does not match the goal"
   closeMainGoal `exact_term proof
 
 elab "exact_term " t:term : tactic => exactTerm t
@@ -774,6 +784,13 @@ Try x+y instead of x-y and observe rejection. The candidate is just data.
 elab "sos_step " s:term : tactic => do
   evalTactic (← `(tactic| refine nonnegOfCertificate _ $s ?_))
 
+-- Equivalently, define the computation first, then connect it to syntax.
+def sosStep (s : TSyntax `term) : TacticM Unit := do
+  evalTactic (← `(tactic| refine nonnegOfCertificate _ $s ?_))
+
+-- Replace the elab above with:
+-- elab "sos_step " s:term : tactic => sosStep s
+
 example (x y : ℝ) : 0 ≤ x^2 - 2*x*y + y^2 := by
   sos_step ((x-y)^2)
   split_and
@@ -793,6 +810,13 @@ example (x y : ℝ) : 0 ≤ x^2 - 2*x*y + y^2 := by
 
 /- Instructor: 97–105 minutes. Read triangleCertificate as three weighted squares.
 Read the rational weights and the leading constant in each affine form.
+The teaching point is that tactics abstract patterns in proofs.
+Before certificateProof, read the concrete cert as (x - 1)^2 + 2*(x + 1)^2.
+The handwritten proof reads its weights and coefficients, then uses mul_nonneg
+and add_nonneg. Its initial le_refl and two additions match the loop below.
+linear_combination checks that this sum is the polynomial in the goal.
+Keep the handwritten proof visible while reading certificateProof: the loop
+repeats the same proof steps for as many summands as the certificate contains.
 The syntax-building helpers are supplied. Trace one iteration: form syntax,
 sq_nonneg, multiply by a nonnegative weight, then add to the running proof.
 The invariant is: proof is syntax for a proof of 0 ≤ the partial weighted sum.
@@ -823,6 +847,21 @@ def rationalSyntax (q : ℚ) : TacticM (TSyntax `term) := do
     `((-($n : ℝ)) / $d)
   else
     `(($n : ℝ) / $d)
+
+-- Read a concrete certificate and build its proof by hand.
+example (x : ℝ) : 0 ≤ 3*x^2 + 2*x + 3 := by
+  let cert : Array SOSTerm := #[⟨1, #[-1, 1]⟩, ⟨2, #[1, 1]⟩]
+  let w₁ : ℝ := cert[0].weight
+  let w₂ : ℝ := cert[1].weight
+  let f₁ : ℝ := (cert[0].form[0]! : ℝ) + (cert[0].form[1]! : ℝ) * x
+  let f₂ : ℝ := (cert[1].form[0]! : ℝ) + (cert[1].form[1]! : ℝ) * x
+  have h₁ : 0 ≤ w₁ * f₁^2 :=
+    mul_nonneg (by norm_num [w₁, cert]) (sq_nonneg f₁)
+  have h₂ : 0 ≤ w₂ * f₂^2 :=
+    mul_nonneg (by norm_num [w₂, cert]) (sq_nonneg f₂)
+  have proof := add_nonneg (add_nonneg (le_refl (0 : ℝ)) h₁) h₂
+  norm_num [w₁, w₂, f₁, f₂, cert] at proof
+  linear_combination proof
 
 -- Each summand contributes a proof that its weighted square is nonnegative.
 def certificateProof (vars : Array (TSyntax `term)) (cert : Array SOSTerm) :

@@ -197,14 +197,11 @@ may unfold when reducing an expression. -/
 def number : Nat := hiddenNumber
 abbrev numberAlias : Nat := number
 
-def traceUnfolding (mode : TransparencyMode) : MetaM Unit := do
-  let e := mkConst ``numberAlias
+def traceUnfolding (name : Name) (mode : TransparencyMode) : MetaM Unit := do
+  let e := mkConst name
   logInfo m!"{← withTransparency mode (reduceAll e)}"
 
-#eval traceUnfolding .none
-#eval traceUnfolding .reducible
-#eval traceUnfolding .default
-#eval traceUnfolding .all
+#eval traceUnfolding ``numberAlias .none
 
 abbrev Both (P Q : Prop) : Prop := P ∧ Q
 
@@ -219,7 +216,7 @@ example (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
     logInfo m!"Definitionally equal: {← isDefEq target normal}"
   exact ⟨hp, hq⟩
 
--- Comparison can assign an unknown.
+-- Warning: isDefEq can assign metavariables to make the expressions match.
 def inferMetavar : MetaM Unit := do
   let x ← mkFreshExprMVar (mkConst ``Nat) (userName := `x)
   let e : Expr := .app (mkConst ``Nat.succ) x
@@ -230,17 +227,20 @@ def inferMetavar : MetaM Unit := do
 
 /- ### 4.2.1. Revisit interval_cases: read the bound -/
 
-elab (priority := low) "my_interval_cases " h:ident : tactic => withMainContext do
-  let proof ← getFVarFromUserName h.getId
-  let type ← whnf (← inferType proof)
+def myIntervalCases_2 (h : Name) : TacticM Unit := withMainContext do
+  let ineq ← getFVarFromUserName h
+  let type ← whnf (← inferType ineq)
   let some (_, a) := type.app2? ``Nat.le
     | throwError "expected a natural-number lower bound"
   unless a.isFVar do
     throwError "expected a variable on the right of the bound"
   sorry
 
+-- elab connects tactic syntax to a TacticM computation.
+elab "my_interval_cases_2 " h:ident : tactic => myIntervalCases_2 h.getId
+
 -- example (k : Nat) (h1 : 1 ≤ k) (h2 : k ≤ 4) : k ∣ 12 := by
---   my_interval_cases h1
+--   my_interval_cases_2 h1
 --   all_goals norm_num
 
 -- 4.3. Revisit hypothesis: update the goal list and report failure.
@@ -333,7 +333,6 @@ elab "split_and" : tactic => do
 We access TermElabM through the tactic-facing helpers below. -/
 
 #check Lean.Elab.Tactic.elabTerm
-#check Lean.Elab.Tactic.elabTermEnsuringType
 #check closeMainGoal
 
 -- 6.1. Elaborate a term and inspect its type.
@@ -348,8 +347,8 @@ example (n : Nat) : n = n := by
 
 /- ### 6.1.1. Revisit interval_cases: elaborate a proof -/
 
--- Add the proof with have, then call my_interval_cases.
-elab "my_interval_cases_term " t:term : tactic => withoutRecover do
+-- Add the proof with have, then call my_interval_cases_2.
+elab "my_interval_cases_term " t:term : tactic => do
   sorry
 
 -- example (k : Nat) (h1 : 2 ≤ k) (h2 : k ≤ 4) : k ∣ 12 := by
@@ -357,11 +356,11 @@ elab "my_interval_cases_term " t:term : tactic => withoutRecover do
 --   all_goals norm_num
 
 -- example (h : True) : True := by
---   fail_if_success my_interval_cases h
+--   fail_if_success my_interval_cases_2 h
 --   fail_if_success my_interval_cases_term (0 : Nat)
 --   exact h
 
--- 6.2. Elaborate against the target type, then close the goal.
+-- 6.2. Elaborate the proof and check its type against the target.
 def exactTerm (stx : Syntax) : TacticM Unit := by
   sorry
 
@@ -457,6 +456,21 @@ def rationalSyntax (q : ℚ) : TacticM (TSyntax `term) := do
     `((-($n : ℝ)) / $d)
   else
     `(($n : ℝ) / $d)
+
+-- Read a concrete certificate and build its proof by hand.
+example (x : ℝ) : 0 ≤ 3*x^2 + 2*x + 3 := by
+  let cert : Array SOSTerm := #[⟨1, #[-1, 1]⟩, ⟨2, #[1, 1]⟩]
+  let w₁ : ℝ := cert[0].weight
+  let w₂ : ℝ := cert[1].weight
+  let f₁ : ℝ := (cert[0].form[0]! : ℝ) + (cert[0].form[1]! : ℝ) * x
+  let f₂ : ℝ := (cert[1].form[0]! : ℝ) + (cert[1].form[1]! : ℝ) * x
+  have h₁ : 0 ≤ w₁ * f₁^2 :=
+    mul_nonneg (by norm_num [w₁, cert]) (sq_nonneg f₁)
+  have h₂ : 0 ≤ w₂ * f₂^2 :=
+    mul_nonneg (by norm_num [w₂, cert]) (sq_nonneg f₂)
+  have proof := add_nonneg (add_nonneg (le_refl (0 : ℝ)) h₁) h₂
+  norm_num [w₁, w₂, f₁, f₂, cert] at proof
+  linear_combination proof
 
 -- Each summand contributes a proof that its weighted square is nonnegative.
 def certificateProof (vars : Array (TSyntax `term)) (cert : Array SOSTerm) :
