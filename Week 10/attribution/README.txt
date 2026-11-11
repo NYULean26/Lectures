@@ -63,7 +63,7 @@ inference-hole checkpoint, and teaching sequence are course adaptations.
 
 2.2–2.3 use MPiL 3 as background for Expr's constructors, before introducing
 metavariables in 3. Its inspector identifies the conjunction's head,
-arguments, and an available local proof; it then constructs And P Q using const
+arguments, and an available local proof; it then constructs an And.intro proof using const
 and app, following MPiL 3, Constructing Expressions. Section 3 then distinguishes a hole
 expression from its target type and follows its assignment.
 

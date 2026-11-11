@@ -1,5 +1,7 @@
 import Mathlib
 
+set_option linter.unusedTactic false
+
 /-
 Metaprogramming II: Asking another computer. November 11, 2026.
 Draft. Instructor copy. Open independently of the student and solution files.
@@ -44,7 +46,7 @@ Learning checkpoints:
 6: they can explain why syntax needs a context and an expected type.
 12: they can explain why a false external answer cannot prove the theorem.
 
-Live typing: 1.1–1.2, 2.1, 4.2.1, 4.3, 5.1–5.2, 6.1.1, 6.2, 7.1, 8.2, 9.1, 11.2.
+Live typing: 1.1–1.2, 2.1, 2.3, 4.2.1, 4.3, 5.1–5.2, 6.1.1, 6.2, 7.1, 8.2, 9.1, 11.2.
 The remaining implementations
 are supplied. Type in Lecture10.lean and uncomment each checkpoint in sequence.
 Run from the repository root. Python 3.10+ is needed for 11–12; 10 is the file fallback.
@@ -167,11 +169,16 @@ context, represented by fvar. Defer de Bruijn calculations and universe arithmet
 Return to mvar and use it to motivate slide 2.
 
 Return to 2.3's inspector to identify the head And, its arguments P and Q,
-and the local proof hp. Then construct the same And P Q using const and two app
-nodes, following MPiL 3, Constructing Expressions. Each app supplies one argument.
-The double backtick resolves the declaration name; And needs no universe arguments,
-so its level list is empty. The printed result uses conjunction notation again.
-Section 5 returns to the implicit P and Q arguments in And.intro.
+and the local proof hp. Construct And.intro using const and successive app nodes,
+following MPiL 3, Constructing Expressions. The first two applications supply P
+and Q; the last two supply hp and hq. The intermediate conjunction expression
+is the constructor awaiting its proofs. And P Q itself is the target proposition.
+The double backtick resolves the declaration name; And.intro needs no universe
+arguments, so its level list is empty. closeMainGoal submits the final expression
+as the proof. Treat this final call as a supplied operation here; no discussion
+of metavariable assignments is needed yet. Section 3 introduces unfinished proofs.
+Students add the last four lines inside run_tac, then remove the outer sorry.
+Section 5 uses mkAppM to infer P and Q, and section 6 reuses closeMainGoal.
 Sources: MPiL 3, Expressions, then MPiL 4, Metavariables.
 https://leanprover-community.github.io/lean4-metaprogramming-book/main/03_expressions.html
 https://leanprover-community.github.io/lean4-metaprogramming-book/main/04_metam.html
@@ -192,18 +199,21 @@ The application tree is schematic. And.intro also has implicit arguments P and Q
 #check Lean.Expr.app
 
 -- 2.3. Inspect and construct expressions.
-set_option linter.unusedTactic false in
+-- Close the goal with closeMainGoal.
+#check getFVarFromUserName
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   run_tac withMainContext do
     let target ← getMainTarget
-    let localProof ← getFVarFromUserName `hp
+    let hp ← getFVarFromUserName `hp
     logInfo m!"Head: {target.getAppFn}; arguments: {target.getAppArgs}"
-    logInfo m!"Local: {localProof} : {← inferType localProof}; isFVar: {localProof.isFVar}"
+    logInfo m!"Local: {hp} : {← inferType hp}; isFVar: {hp.isFVar}"
     let p ← getFVarFromUserName `P
     let q ← getFVarFromUserName `Q
-    let conjunction : Expr := .app (.app (.const ``And []) p) q
+    let conjunction : Expr := .app (.app (.const ``And.intro []) p) q
     logInfo m!"Constructed: {conjunction}"
-  exact ⟨hp, hq⟩
+    let hq ← getFVarFromUserName `hq
+    let proof : Expr := .app (.app conjunction hp) hq
+    closeMainGoal `example proof
 
 /- Instructor: 23–37 minutes.
 Slide 2 introduces Expr.mvar: how can the tree represent an unfinished term?
@@ -226,7 +236,6 @@ Its MVarId identifies a hole with a type, a local context, and possibly an assig
 
 -- 3.1 (supplied). Revisit 2.1 with named goals and inspect the left one.
 set_option pp.mvars true in
-set_option linter.unusedTactic false in
 theorem test_refine (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   refine And.intro ?left ?right
   -- ?g := And.intro ?left ?right
@@ -297,7 +306,6 @@ Defer the tactic goal list to TacticM in section 4.
 
 /- ### 3.3. A metavariable's local context -/
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) : (P → P) ∧ (Q → Q) := by
   constructor
   all_goals intro h
@@ -371,7 +379,6 @@ def inspectGoals : TacticM Unit := do
         if !decl.isImplementationDetail then
           logInfo m!"  {decl.userName} : {decl.type}"
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   refine And.intro ?left ?right
   run_tac inspectGoals
@@ -427,7 +434,6 @@ def traceUnfolding (mode : TransparencyMode) : MetaM Unit := do
 
 abbrev Both (P Q : Prop) : Prop := P ∧ Q
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
   run_tac withMainContext do
     let target ← getMainTarget
@@ -557,7 +563,6 @@ This is the proof-term construction hidden by constructor and our warmup macro.
 
 #check @And.intro
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   run_tac withMainContext do
     let hp ← getFVarFromUserName `hp
@@ -585,7 +590,6 @@ elab "split_and" : tactic => do
   let newGoals ← splitAndCore goal
   replaceMainGoal newGoals
 
-set_option linter.unusedTactic false in
 theorem test_split (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
   run_tac withMainContext do
     let target ← getMainTarget
@@ -597,7 +601,6 @@ theorem test_split (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
 #print test_split
 
 -- 5.3. Splitting the first goal must preserve the already pending second goal.
-set_option linter.unusedTactic false in
 example (P Q R : Prop) (hp : P) (hq : Q) (hr : R) : (P ∧ Q) ∧ R := by
   split_and
   split_and
@@ -654,7 +657,6 @@ elab "inspect_term " t:term : tactic => withMainContext do
   let e ← elabTerm t none
   logInfo m!"{e} : {← inferType e}"
 
-set_option linter.unusedTactic false in
 example (n : Nat) : n = n := by
   inspect_term (n + 1)
   inspect_term (0 : Int)

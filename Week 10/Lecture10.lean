@@ -1,5 +1,7 @@
 import Mathlib
 
+set_option linter.unusedTactic false
+
 /- Metaprogramming II: Asking another computer. November 11, 2026.
 Open independently of the solution and instructor copies.
 Based on Macbeth's Simons tutorial, MPiL, and LoVe 8; IO continues Week 08.
@@ -82,18 +84,18 @@ The application tree is schematic. And.intro also has implicit arguments P and Q
 #check Lean.Expr.app
 
 -- 2.3. Inspect and construct expressions.
-set_option linter.unusedTactic false in
+-- Close the goal with closeMainGoal.
+#check getFVarFromUserName
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   run_tac withMainContext do
     let target ← getMainTarget
-    let localProof ← getFVarFromUserName `hp
+    let hp ← getFVarFromUserName `hp
     logInfo m!"Head: {target.getAppFn}; arguments: {target.getAppArgs}"
-    logInfo m!"Local: {localProof} : {← inferType localProof}; isFVar: {localProof.isFVar}"
+    logInfo m!"Local: {hp} : {← inferType hp}; isFVar: {hp.isFVar}"
     let p ← getFVarFromUserName `P
     let q ← getFVarFromUserName `Q
-    let conjunction : Expr := .app (.app (.const ``And []) p) q
-    logInfo m!"Constructed: {conjunction}"
-  exact ⟨hp, hq⟩
+    let conjunction : Expr := .app (.app (.const ``And.intro []) p) q
+  sorry
 
 /- ## 3. Metavariables -/
 
@@ -106,7 +108,6 @@ Its MVarId identifies a hole with a type, a local context, and possibly an assig
 
 -- 3.1. Revisit 2.1 with named goals and inspect the left one.
 set_option pp.mvars true in
-set_option linter.unusedTactic false in
 theorem test_refine (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   refine And.intro ?left ?right
   -- ?g := And.intro ?left ?right
@@ -148,7 +149,6 @@ def metavarDemo : MetaM Unit := do
 
 /- ### 3.3. A metavariable's local context -/
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) : (P → P) ∧ (Q → Q) := by
   constructor
   all_goals intro h
@@ -181,7 +181,6 @@ def inspectGoals : TacticM Unit := do
         if !decl.isImplementationDetail then
           logInfo m!"  {decl.userName} : {decl.type}"
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   refine And.intro ?left ?right
   run_tac inspectGoals
@@ -209,7 +208,6 @@ def traceUnfolding (mode : TransparencyMode) : MetaM Unit := do
 
 abbrev Both (P Q : Prop) : Prop := P ∧ Q
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
   run_tac withMainContext do
     let target ← getMainTarget
@@ -288,7 +286,6 @@ Check the assigned term's type first: assign itself does not type-check it. -/
 
 #check @And.intro
 
-set_option linter.unusedTactic false in
 example (P Q : Prop) (hp : P) (hq : Q) : P ∧ Q := by
   run_tac withMainContext do
     let hp ← getFVarFromUserName `hp
@@ -305,7 +302,6 @@ def splitAndCore (goal : MVarId) : MetaM (List MVarId) := by
 elab "split_and" : tactic => do
   throwError "TODO 5.2"
 
--- set_option linter.unusedTactic false in
 -- theorem test_split (P Q : Prop) (hp : P) (hq : Q) : Both (id P) Q := by
 --   run_tac withMainContext do
 --     let target ← getMainTarget
@@ -317,7 +313,6 @@ elab "split_and" : tactic => do
 -- #print test_split
 
 -- 5.3. Preserve the pending goal R.
--- set_option linter.unusedTactic false in
 -- example (P Q R : Prop) (hp : P) (hq : Q) (hr : R) : (P ∧ Q) ∧ R := by
 --   split_and
 --   split_and
@@ -346,7 +341,6 @@ elab "inspect_term " t:term : tactic => withMainContext do
   let e ← elabTerm t none
   logInfo m!"{e} : {← inferType e}"
 
-set_option linter.unusedTactic false in
 example (n : Nat) : n = n := by
   inspect_term (n + 1)
   inspect_term (0 : Int)

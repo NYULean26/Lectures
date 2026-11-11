@@ -33,8 +33,9 @@ Stay in Lean for 1 and 2.1: the interval warmup, then a conjunction proof with
 The first switch to slides is at **2.2, How Lean represents these terms**.
 Show `Expr` first, then move to the separate section **3, Metavariables**.
 The same conjunction connects the complete proof, its expression tree, and
-the proof under construction. Section 2.3 inspects its target and local proof, then constructs `And P Q`
-with `.const` and two `.app` nodes.
+the proof under construction. Section 2.3 inspects its target and local proof, then constructs `And.intro`
+applied to `P`, `Q`, `hp`, and `hq` using `.const` and `.app`. It passes the
+complete proof to `closeMainGoal`. Section 3 introduces unfinished expressions.
 The two-context example first appears in 3.3, alongside `withContext`.
 The student file marks each slide transition with `(Slide …)` comments.
 
@@ -99,7 +100,7 @@ If behind, omit the intermediate transparency modes;
 give the quotation in 9.1.
 Preserve expressions, metavariables, the Python call, and a wrong-answer experiment.
 
-The student gaps are 1.1–1.2, 2.1, 4.2.1, 4.3, 5.1–5.2, 6.1.1, 6.2, 7.1, 8.2,
+The student gaps are 1.1–1.2, 2.1, 2.3, 4.2.1, 4.3, 5.1–5.2, 6.1.1, 6.2, 7.1, 8.2,
 9.1, and 11.2. The interval wrappers have short gaps; lookup and matching are prefilled.
 In 4.3, fill only the goal update and return; the previous search loop is retained.
 Students predict and run the other examples. Fill each gap, then uncomment its
