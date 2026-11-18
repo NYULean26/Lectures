@@ -1,0 +1,51 @@
+% !TeX program = lualatex
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage{amsmath,amssymb,tikz,array}
+\usetikzlibrary{arrows.meta,positioning}
+\useoutertheme{miniframes}
+
+% Match Lecture09.pdf: Computer Modern, NYU purple, narrow margins,
+% section navigation, two-line footer, and lightly outlined proof states.
+\definecolor{nyu}{HTML}{57068C}
+\definecolor{navpurple}{HTML}{4C2A7E}
+\setbeamercolor{structure}{fg=nyu}
+\setbeamercolor{frametitle}{fg=nyu,bg=white}
+\setbeamercolor{section in head/foot}{fg=white,bg=navpurple}
+\setbeamercolor{author in head/foot}{fg=white,bg=navpurple}
+\setbeamercolor{title in head/foot}{fg=white,bg=navpurple!92!black}
+\setbeamercolor{normal text}{fg=black,bg=white}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{mini frames}[default]
+\setbeamersize{text margin left=3mm,text margin right=3mm}
+\setbeamerfont{frametitle}{size=\large}
+\setbeamerfont{section in head/foot}{size=\fontsize{6}{7}\selectfont,series=\mdseries}
+\setbeamerfont{author in head/foot}{size=\fontsize{6}{7}\selectfont,series=\mdseries}
+\setbeamerfont{title in head/foot}{size=\fontsize{6}{7}\selectfont,series=\mdseries}
+\setbeamertemplate{footline}{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=2.4mm,dp=1mm,leftskip=3mm,rightskip=3mm]{author in head/foot}%
+    \usebeamerfont{author in head/foot}Jaume\hfill NYU
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=2.4mm,dp=1mm,leftskip=3mm,rightskip=3mm]{title in head/foot}%
+    \usebeamerfont{title in head/foot}Week 11: SOS and proofs by reflection\hfill\insertframenumber/\inserttotalframenumber
+  \end{beamercolorbox}%
+}
+\title{Proofs and computation}
+\subtitle{\normalsize
+  (1) Proofs by verifying external computations.\\[3mm]
+  (2) Proofs by verifying an external checker.}
+\author{Jaume de Dios Pont}
+\institute{New York University}
+\date{November 18, 2026}
+\hypersetup{pdftitle={Week 11: SOS and proofs by reflection},pdfauthor={Jaume de Dios Pont}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\tikzset{
+  proof/.style={draw=nyu!25,fill=nyu!2,inner sep=7pt,align=left},
+  flow/.style={draw=black!42,semithick,-{Stealth[length=3pt,width=4pt]}},
+  labeltext/.style={font=\small,text=black!65,align=center},
+  purple/.style={text=nyu},
+}
+
+\begin{document}
+\input{Lecture11_Content.tex}
+\end{document}
