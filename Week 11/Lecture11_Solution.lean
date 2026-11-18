@@ -11,7 +11,7 @@ open Lean Lean.Meta Lean.Elab.Tactic
 
 namespace Week11
 
--- (Slide 1: Proofs and computation)
+-- (Slide 1: Proofs by verifying external computations || Proofs by verifying the checker)
 
 /- ## 1. A proof we want to automate -/
 
